@@ -2,20 +2,10 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:math';
+import 'package:umass_geoguessr_app/gameOverPage.dart';
 
 class GamePage extends StatefulWidget {
-  const GamePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+  const GamePage({super.key});
 
   @override
   State<GamePage> createState() => _GamePageState();
@@ -24,33 +14,73 @@ class GamePage extends StatefulWidget {
 class _GamePageState extends State<GamePage> {
   bool _roundOver = false;
   bool _gameOver = false;
-  int _score = 0;
-
+  int _roundScore = 0;
+  int _totalScore = 0;
   final List<String> _imagePaths = [
-    "images/image_1.png",
+    "images/road_near_frank.png",
     "images/fine_arts_roof.jpg",
     "images/hasbrouck_bridge.jpg",
     "images/ilc_table_room.jpg",
+    "images/back_of_hasbrouck.png",
+    "images/front_of_hasbrouck.png",
+    "images/integrated_science_bldg.png",
   ];
-  int _currentImageIdx = 0;
+  final List<LatLng> _targetCoords = [
+    const LatLng(42.389777, -72.523340),
+    const LatLng(42.388175, -72.526205),
+    const LatLng(42.391825, -72.525813),
+    const LatLng(42.390851, -72.525820),
+    const LatLng(42.391851, -72.526404),
+    const LatLng(42.392471, -72.526093),
+    const LatLng(42.391759, -72.524170),
+  ];
+  int _roundIndex = 0;
 
   // switch image to next in array
   // if went thru all images, stop game
-  void _switchImage() {
+  void _switchTargetLocation() {
     setState(() {
-      _currentImageIdx = _currentImageIdx + 1;
+      _roundIndex = (_roundIndex + 1) % _imagePaths.length;
     });
-    if (_currentImageIdx == _imagePaths.length) {
-      _stopGame();
+    // if cycled back to 0, went thru all images
+    if (_roundIndex == 0) {
+      debugPrint("Cycle");
+      _stopGame("You went through all of the images!");
     }
+  }
+
+  void _stopGame(String content) {
+    setState(() {
+      _gameOver = true;
+    });
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Game Over'),
+          content: Text(content),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (BuildContext context) =>
+                        GameOverPage(score: _totalScore, time: _gameSeconds)));
+              },
+              child: const Text('Show results'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   // late means not initialized until first use
   late Timer gameTimer;
   late Timer roundTimer;
-  final int _totalRoundSeconds = 5;
-  int _gameSeconds = 30;
-  int _roundSeconds = 5;
+  final int _totalRoundSeconds = 30;
+  int _gameSeconds = 210;
+  int _roundSeconds = 20;
 
   Timer _startRoundTimer() {
     const oneSec = Duration(seconds: 1);
@@ -61,13 +91,32 @@ class _GamePageState extends State<GamePage> {
           setState(() {
             timer.cancel();
           });
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text('Round over'),
+                content: const Text('The round timer has run out.'),
+                actions: [
+                  ElevatedButton(
+                    onPressed: () {
+                      _nextRound();
+                      Navigator.of(context).pop(); // Close the dialog
+                    },
+                    child: const Text('Next'),
+                  ),
+                ],
+              );
+            },
+          );
         } else if (_roundSeconds == 1) {
           // weird thing when roundTime = 0 but gameTime still goes down
           setState(() {
             _roundSeconds--;
             _stopRound();
           });
-        } else {
+        } else if (!_roundOver && !_gameOver) {
           setState(() {
             _roundSeconds--;
           });
@@ -85,10 +134,8 @@ class _GamePageState extends State<GamePage> {
       oneSec,
       (Timer timer) {
         if (_gameSeconds == 0) {
-          setState(() {
-            timer.cancel();
-            _stopGame();
-          });
+          timer.cancel();
+          _stopGame("The game timer has run out.");
           // stop game timer from running while round is over
         } else if (!_roundOver) {
           setState(() {
@@ -118,7 +165,7 @@ class _GamePageState extends State<GamePage> {
 
   LatLng guessPos = const LatLng(0, 0);
 
-  LatLng answerPos = const LatLng(42.389777, -72.523340);
+  LatLng answerPos = const LatLng(0, 0);
 
   Polyline line = const Polyline(
       polylineId: PolylineId('guessanswerline'),
@@ -132,6 +179,8 @@ class _GamePageState extends State<GamePage> {
 
   void makeGuess() {
     setState(() {
+      answerPos = _targetCoords[_roundIndex];
+
       line = Polyline(
           width: 3,
           polylineId: const PolylineId('guessanswerline'),
@@ -147,41 +196,46 @@ class _GamePageState extends State<GamePage> {
               6371) *
           1000;
 
-      _score = (1000.0 - (1000.0 * (dist / 1000)))
-          .toInt(); // (time remaining/total time)
+      _roundScore = ((1000.0 - (1000.0 * (dist / 1000))) *
+              ((_roundSeconds) / _totalRoundSeconds))
+          .toInt();
 
-      if (_score < 0) {
-        _score = 0;
+      if (_roundScore < 0) {
+        _roundScore = 0;
       }
-    });
-  }
 
-  void markGuess(coords) {
-    setState(() {
-      guessPos = coords;
+      _totalScore += _roundScore;
     });
-  }
 
-  void _nextRound() {
-    setState(() {
-      _roundOver = false;
-      _roundSeconds = _totalRoundSeconds;
-      roundTimer = _startRoundTimer();
-    });
-    _switchImage();
-  }
-
-  void _stopRound() {
-    setState(() {
-      _roundOver = true;
-    });
+    _stopRound();
+    if (_roundIndex == _imagePaths.length - 1) {
+      _nextRound();
+    }
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Timer Finished'),
-          content: const Text('The timer has run out.'),
+          content: Center(
+            heightFactor: 0.2,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text("Distance: ${dist.toInt()} meters",
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center),
+                Text(
+                    "Round time: ${_totalRoundSeconds - _roundSeconds} seconds",
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center),
+                Text("Round score: $_roundScore points",
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center),
+              ],
+              // Text(
+              //   "Distance: ${dist.toInt()} meters \n Round time: ${_totalRoundSeconds - _roundSeconds} seconds\n Round score: $_roundScore points",
+            ),
+          ),
           actions: [
             ElevatedButton(
               onPressed: () {
@@ -196,12 +250,32 @@ class _GamePageState extends State<GamePage> {
     );
   }
 
-  void _stopGame() {
+  void markGuess(coords) {
     setState(() {
-      _gameOver = true;
+      guessPos = coords;
     });
   }
 
+  void _nextRound() {
+    setState(() {
+      _roundOver = false;
+      roundTimer.cancel();
+      _roundSeconds = _totalRoundSeconds;
+      roundTimer = _startRoundTimer();
+      line = const Polyline(
+          polylineId: PolylineId('guessanswerline'),
+          points: <LatLng>[LatLng(0, 0), LatLng(0, 0)]);
+      guessPos = const LatLng(0, 0);
+      answerPos = const LatLng(0, 0);
+    });
+    _switchTargetLocation();
+  }
+
+  void _stopRound() {
+    setState(() {
+      _roundOver = true;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -213,8 +287,8 @@ class _GamePageState extends State<GamePage> {
     // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
+        title: Text("Umass Geoguessr", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
         backgroundColor: const Color.fromARGB(255, 163, 25, 25),
-        title: Text(widget.title, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
       ),
       body: Stack(
         children: <Widget>[
@@ -245,7 +319,7 @@ class _GamePageState extends State<GamePage> {
               },
             ),
           ),
-          IconButtonExample(imagePaths: _imagePaths, currentImageIdx: _currentImageIdx),
+          IconButtonExample(imagePaths: _imagePaths, currentImageIdx: _roundIndex),
         ],
       ),
       bottomNavigationBar: BottomAppBar(
@@ -259,7 +333,15 @@ class _GamePageState extends State<GamePage> {
             ),
             Container(
               margin: const EdgeInsets.all(8.0),
-              child: Text("score: $_score"),
+              child: Text("distance: ${dist.toInt()} meters"),
+            ),
+            Container(
+              margin: const EdgeInsets.all(8.0),
+              child: Text("round score: $_roundScore"),
+            ),
+            Container(
+              margin: const EdgeInsets.all(8.0),
+              child: Text("total score: $_totalScore"),
             ),
             Container(
               margin: const EdgeInsets.all(8.0),
@@ -268,10 +350,6 @@ class _GamePageState extends State<GamePage> {
             Container(
               margin: const EdgeInsets.all(8.0),
               child: Text("game time: $_gameSeconds"),
-            ),
-            Container(
-              margin: const EdgeInsets.all(8.0),
-              child: Text("distance: ${dist.toInt()} meters"),
             ),
           ],
         ),
@@ -283,7 +361,8 @@ class _GamePageState extends State<GamePage> {
 class IconButtonExample extends StatefulWidget {
   final List<String> imagePaths;
   final int currentImageIdx;
-  const IconButtonExample({super.key, required this.imagePaths, required this.currentImageIdx});
+  const IconButtonExample(
+      {super.key, required this.imagePaths, required this.currentImageIdx});
 
   @override
   State<IconButtonExample> createState() => _IconButtonExampleState();
