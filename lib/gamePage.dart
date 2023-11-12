@@ -213,53 +213,40 @@ class _GamePageState extends State<GamePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
-      body: Center(
-        child: Row(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            SizedBox(
-              width: 750,
-              height: 750,
-              child: GoogleMap(
-                onTap: (coords) => markGuess(coords),
-                markers: {
-                  Marker(
-                    markerId: const MarkerId('guess'),
-                    position: guessPos,
-                  ),
-                  Marker(
-                    markerId: const MarkerId('answer'),
-                    position: answerPos,
-                  )
-                },
-                polylines: {line},
-                cloudMapId: '74ae03550584037b',
-                cameraTargetBounds: CameraTargetBounds(LatLngBounds(
-                    southwest: const LatLng(42.383764, -72.536265),
-                    northeast: const LatLng(42.396610, -72.516493))),
-                minMaxZoomPreference: const MinMaxZoomPreference(15.5, 19),
-                initialCameraPosition: umasscampus,
-                onMapCreated: (GoogleMapController controller) {
-                  _controller.complete(controller);
-                },
-              ),
+      body: Stack(
+        children: <Widget>[
+          SizedBox(
+            width: double.infinity,
+            height: double.infinity,
+            child: GoogleMap(
+              onTap: (coords) => markGuess(coords),
+              markers: {
+                Marker(
+                  markerId: const MarkerId('guess'),
+                  position: guessPos,
+                ),
+                Marker(
+                  markerId: const MarkerId('answer'),
+                  position: answerPos,
+                )
+              },
+              polylines: {line},
+              cloudMapId: '74ae03550584037b',
+              cameraTargetBounds: CameraTargetBounds(LatLngBounds(
+                  southwest: const LatLng(42.383764, -72.536265),
+                  northeast: const LatLng(42.396610, -72.516493))),
+              minMaxZoomPreference: const MinMaxZoomPreference(15.5, 19),
+              initialCameraPosition: umasscampus,
+              onMapCreated: (GoogleMapController controller) {
+                _controller.complete(controller);
+              },
             ),
-            Image.asset(_imagePaths[_currentImageIdx], scale: 2.5),
-          ],
-        ),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: IconButtonExample(imagePaths: _imagePaths, currentImageIdx: _currentImageIdx),
+          ),
+        ],
       ),
       bottomNavigationBar: BottomAppBar(
         shape: const CircularNotchedRectangle(),
@@ -290,5 +277,38 @@ class _GamePageState extends State<GamePage> {
         ),
       ),
     );
+  }
+}
+
+class IconButtonExample extends StatefulWidget {
+  final List<String> imagePaths;
+  final int currentImageIdx;
+  const IconButtonExample({super.key, required this.imagePaths, required this.currentImageIdx});
+
+  @override
+  State<IconButtonExample> createState() => _IconButtonExampleState();
+}
+
+class _IconButtonExampleState extends State<IconButtonExample> {
+  double _scale = 0.5;
+  int _coeff = -1;
+  @override
+  Widget build(BuildContext context) {
+    return Transform.scale(
+        scale: _scale,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.inversePrimary,
+          ),
+          child: IconButton(
+              icon: Image.asset(widget.imagePaths[widget.currentImageIdx], scale: 2.5),
+              tooltip: 'Expand image',
+              onPressed: () {
+                setState(() {
+                  _coeff = _coeff * -1;
+                  _scale = _scale + 0.54 * _coeff;
+                });
+              }),
+        ));
   }
 }
