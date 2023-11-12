@@ -24,22 +24,35 @@ class GamePage extends StatefulWidget {
 class _GamePageState extends State<GamePage> {
   bool _roundOver = false;
   bool _gameOver = false;
-  int _score = 0;
+  int _roundScore = 0;
+  int _totalScore = 0;
   final List<String> _imagePaths = [
-    "images/image_1.png",
+    "images/road_near_frank.png",
     "images/fine_arts_roof.jpg",
     "images/hasbrouck_bridge.jpg",
     "images/ilc_table_room.jpg",
+    "images/back_of_hasbrouck.png",
+    "images/front_of_hasbrouck.png",
+    "images/integrated_science_bldg.png",
   ];
-  int _currentImageIdx = 0;
+  final List<LatLng> _targetCoords = [
+    const LatLng(42.389777, -72.523340),
+    const LatLng(42.389777, -72.523340),
+    const LatLng(42.389777, -72.523340),
+    const LatLng(42.389777, -72.523340),
+    const LatLng(42.391851, -72.526404),
+    const LatLng(42.392471, -72.526093),
+    const LatLng(42.391759, -72.524170),
+  ];
+  int _roundIndex = 0;
 
   // switch image to next in array
   // if went thru all images, stop game
-  void _switchImage() {
+  void _switchTargetLocation() {
     setState(() {
-      _currentImageIdx = _currentImageIdx + 1;
+      _roundIndex = _roundIndex + 1;
     });
-    if (_currentImageIdx == _imagePaths.length) {
+    if (_roundIndex == _imagePaths.length) {
       _stopGame();
     }
   }
@@ -47,9 +60,9 @@ class _GamePageState extends State<GamePage> {
   // late means not initialized until first use
   late Timer gameTimer;
   late Timer roundTimer;
-  final int _totalRoundSeconds = 5;
-  int _gameSeconds = 30;
-  int _roundSeconds = 5;
+  final int _totalRoundSeconds = 30;
+  int _gameSeconds = 210;
+  int _roundSeconds = 30;
 
   Timer _startRoundTimer() {
     const oneSec = Duration(seconds: 1);
@@ -66,7 +79,9 @@ class _GamePageState extends State<GamePage> {
             _roundSeconds--;
             _stopRound();
           });
-        } else {
+        } else if (_roundOver) {
+          // do nothing
+        } else if (!_roundOver) {
           setState(() {
             _roundSeconds--;
           });
@@ -88,6 +103,24 @@ class _GamePageState extends State<GamePage> {
             timer.cancel();
             _stopGame();
           });
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text('Timer Finished'),
+                content: const Text('The timer has run out.'),
+                actions: [
+                  ElevatedButton(
+                    onPressed: () {
+                      _nextRound();
+                      Navigator.of(context).pop(); // Close the dialog
+                    },
+                    child: const Text('Next'),
+                  ),
+                ],
+              );
+            },
+          );
           // stop game timer from running while round is over
         } else if (!_roundOver) {
           setState(() {
@@ -117,7 +150,7 @@ class _GamePageState extends State<GamePage> {
 
   LatLng guessPos = const LatLng(0, 0);
 
-  LatLng answerPos = const LatLng(42.389777, -72.523340);
+  LatLng answerPos = const LatLng(0, 0);
 
   Polyline line = const Polyline(
       polylineId: PolylineId('guessanswerline'),
@@ -131,6 +164,8 @@ class _GamePageState extends State<GamePage> {
 
   void makeGuess() {
     setState(() {
+      answerPos = _targetCoords[_roundIndex];
+
       line = Polyline(
           width: 3,
           polylineId: const PolylineId('guessanswerline'),
@@ -146,13 +181,40 @@ class _GamePageState extends State<GamePage> {
               6371) *
           1000;
 
-      _score = (1000.0 - (1000.0 * (dist / 1000)))
-          .toInt(); // (time remaining/total time)
+      _roundScore = ((1000.0 - (1000.0 * (dist / 1000))) *
+              ((_roundSeconds) / _totalRoundSeconds))
+          .toInt();
 
-      if (_score < 0) {
-        _score = 0;
+      if (_roundScore < 0) {
+        _roundScore = 0;
       }
+
+      _totalScore += _roundScore;
     });
+
+    _stopRound();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: Text(
+              "Distance: ${dist.toInt()} meters \n Round time: ${_totalRoundSeconds - _roundSeconds} seconds\n Round score: $_roundScore points",
+              style: const TextStyle(fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                roundTimer.cancel();
+                _nextRound();
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text('Next'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void markGuess(coords) {
@@ -166,32 +228,19 @@ class _GamePageState extends State<GamePage> {
       _roundOver = false;
       _roundSeconds = _totalRoundSeconds;
       roundTimer = _startRoundTimer();
+      line = const Polyline(
+          polylineId: PolylineId('guessanswerline'),
+          points: <LatLng>[LatLng(0, 0), LatLng(0, 0)]);
+      guessPos = const LatLng(0, 0);
+      answerPos = const LatLng(0, 0);
     });
-    _switchImage();
+    _switchTargetLocation();
   }
 
   void _stopRound() {
     setState(() {
       _roundOver = true;
     });
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Timer Finished'),
-          content: const Text('The timer has run out.'),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                _nextRound();
-                Navigator.of(context).pop(); // Close the dialog
-              },
-              child: const Text('Next'),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   void _stopGame() {
@@ -244,7 +293,8 @@ class _GamePageState extends State<GamePage> {
           ),
           Align(
             alignment: Alignment.centerRight,
-            child: IconButtonExample(imagePaths: _imagePaths, currentImageIdx: _currentImageIdx),
+            child: IconButtonExample(
+                imagePaths: _imagePaths, currentImageIdx: _roundIndex),
           ),
         ],
       ),
@@ -259,7 +309,15 @@ class _GamePageState extends State<GamePage> {
             ),
             Container(
               margin: const EdgeInsets.all(8.0),
-              child: Text("score: $_score"),
+              child: Text("distance: ${dist.toInt()} meters"),
+            ),
+            Container(
+              margin: const EdgeInsets.all(8.0),
+              child: Text("round score: $_roundScore"),
+            ),
+            Container(
+              margin: const EdgeInsets.all(8.0),
+              child: Text("total score: $_totalScore"),
             ),
             Container(
               margin: const EdgeInsets.all(8.0),
@@ -268,10 +326,6 @@ class _GamePageState extends State<GamePage> {
             Container(
               margin: const EdgeInsets.all(8.0),
               child: Text("game time: $_gameSeconds"),
-            ),
-            Container(
-              margin: const EdgeInsets.all(8.0),
-              child: Text("distance: ${dist.toInt()} meters"),
             ),
           ],
         ),
@@ -283,7 +337,8 @@ class _GamePageState extends State<GamePage> {
 class IconButtonExample extends StatefulWidget {
   final List<String> imagePaths;
   final int currentImageIdx;
-  const IconButtonExample({super.key, required this.imagePaths, required this.currentImageIdx});
+  const IconButtonExample(
+      {super.key, required this.imagePaths, required this.currentImageIdx});
 
   @override
   State<IconButtonExample> createState() => _IconButtonExampleState();
@@ -301,7 +356,8 @@ class _IconButtonExampleState extends State<IconButtonExample> {
             color: Theme.of(context).colorScheme.inversePrimary,
           ),
           child: IconButton(
-              icon: Image.asset(widget.imagePaths[widget.currentImageIdx], scale: 2.5),
+              icon: Image.asset(widget.imagePaths[widget.currentImageIdx],
+                  scale: 2.5),
               tooltip: 'Expand image',
               onPressed: () {
                 setState(() {
