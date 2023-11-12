@@ -3,19 +3,10 @@ import 'dart:async';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:math';
 
+import 'package:umass_geoguessr_app/gameOverPage.dart';
+
 class GamePage extends StatefulWidget {
-  const GamePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+  const GamePage({super.key});
 
   @override
   State<GamePage> createState() => _GamePageState();
@@ -50,10 +41,11 @@ class _GamePageState extends State<GamePage> {
   // if went thru all images, stop game
   void _switchTargetLocation() {
     setState(() {
-      _roundIndex = _roundIndex + 1;
+      _roundIndex = (_roundIndex + 1) % _imagePaths.length;
     });
-    if (_roundIndex == _imagePaths.length) {
-      _stopGame();
+    // if cycled back to 0, went thru all images
+    if (_roundIndex == 0) {
+      _stopGame("You went through all of the images!");
     }
   }
 
@@ -62,7 +54,7 @@ class _GamePageState extends State<GamePage> {
   late Timer roundTimer;
   final int _totalRoundSeconds = 30;
   int _gameSeconds = 210;
-  int _roundSeconds = 30;
+  int _roundSeconds = 20;
 
   Timer _startRoundTimer() {
     const oneSec = Duration(seconds: 1);
@@ -73,6 +65,25 @@ class _GamePageState extends State<GamePage> {
           setState(() {
             timer.cancel();
           });
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text('Round over'),
+                content: const Text('The round timer has run out.'),
+                actions: [
+                  ElevatedButton(
+                    onPressed: () {
+                      _nextRound();
+                      Navigator.of(context).pop(); // Close the dialog
+                    },
+                    child: const Text('Next'),
+                  ),
+                ],
+              );
+            },
+          );
         } else if (_roundSeconds == 1) {
           // weird thing when roundTime = 0 but gameTime still goes down
           setState(() {
@@ -99,28 +110,8 @@ class _GamePageState extends State<GamePage> {
       oneSec,
       (Timer timer) {
         if (_gameSeconds == 0) {
-          setState(() {
-            timer.cancel();
-            _stopGame();
-          });
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: const Text('Timer Finished'),
-                content: const Text('The timer has run out.'),
-                actions: [
-                  ElevatedButton(
-                    onPressed: () {
-                      _nextRound();
-                      Navigator.of(context).pop(); // Close the dialog
-                    },
-                    child: const Text('Next'),
-                  ),
-                ],
-              );
-            },
-          );
+          timer.cancel();
+          _stopGame("The game timer has run out.");
           // stop game timer from running while round is over
         } else if (!_roundOver) {
           setState(() {
@@ -196,12 +187,29 @@ class _GamePageState extends State<GamePage> {
 
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          content: Text(
-              "Distance: ${dist.toInt()} meters \n Round time: ${_totalRoundSeconds - _roundSeconds} seconds\n Round score: $_roundScore points",
-              style: const TextStyle(fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center),
+          content: Center(
+            heightFactor: 0.2,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text("Distance: ${dist.toInt()} meters",
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center),
+                Text(
+                    "Round time: ${_totalRoundSeconds - _roundSeconds} seconds",
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center),
+                Text("Round score: $_roundScore points",
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center),
+              ],
+              // Text(
+              //   "Distance: ${dist.toInt()} meters \n Round time: ${_totalRoundSeconds - _roundSeconds} seconds\n Round score: $_roundScore points",
+            ),
+          ),
           actions: [
             ElevatedButton(
               onPressed: () {
@@ -243,10 +251,30 @@ class _GamePageState extends State<GamePage> {
     });
   }
 
-  void _stopGame() {
+  void _stopGame(String content) {
     setState(() {
       _gameOver = true;
     });
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Game Over'),
+          content: Text(content),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (BuildContext context) =>
+                        GameOverPage(score: _totalScore, time: _gameSeconds)));
+              },
+              child: const Text('Show results'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -260,7 +288,7 @@ class _GamePageState extends State<GamePage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
+        title: const Text("Umass Geoguessr"),
       ),
       body: Stack(
         children: <Widget>[
