@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'dart:math';
 
 void main() {
   runApp(const MyApp());
@@ -30,8 +31,8 @@ class MyApp extends StatelessWidget {
         //
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
-        colorScheme:
-            ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 163, 25, 25)),
+        colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color.fromARGB(255, 163, 25, 25)),
         useMaterial3: true,
       ),
       home: const MyHomePage(title: 'UMass GeoGuessr'),
@@ -66,16 +67,45 @@ class _MyHomePageState extends State<MyHomePage> {
     zoom: 15.8,
   );
 
-  int _counter = 0;
+  LatLng guessPos = const LatLng(0, 0);
 
-  void _makeGuess() {
+  LatLng answerPos = const LatLng(42.389777, -72.523340);
+
+  Polyline line = const Polyline(
+      polylineId: PolylineId('guessanswerline'),
+      points: <LatLng>[LatLng(0, 0), LatLng(0, 0)]);
+
+  double dist = 0;
+
+  double degToRad(deg) {
+    return (deg * pi) / 180;
+  }
+
+  void makeGuess() {
     setState(() {
       // This call to setState tells the Flutter framework that something has
       // changed in this State, which causes it to rerun the build method below
       // so that the display can reflect the updated values. If we changed
       // _counter without calling setState(), then the build method would not be
       // called again, and so nothing would appear to happen.
-      _counter++;
+      line = Polyline(
+          width: 3,
+          polylineId: const PolylineId('guessanswerline'),
+          points: <LatLng>[guessPos, answerPos]);
+
+      // dist = acos(sin(lat1)*sin(lat2)+cos(lat1)*cos(lat2)*cos(lon2-lon1))*6371  (in kilometers)
+      dist = acos((sin(degToRad(guessPos.latitude)) *
+                  sin(degToRad(answerPos.latitude))) +
+              (cos(degToRad(guessPos.latitude)) *
+                  cos(degToRad(answerPos.latitude)) *
+                  cos(degToRad(answerPos.longitude - guessPos.longitude)))) *
+          6371;
+    });
+  }
+
+  void markGuess(coords) {
+    setState(() {
+      guessPos = coords;
     });
   }
 
@@ -116,18 +146,28 @@ class _MyHomePageState extends State<MyHomePage> {
           // wireframe for each widget.
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            Text(dist.toString()),
             SizedBox(
               width: 750,
               height: 750,
               child: GoogleMap(
-                // key:
+                onTap: (coords) => markGuess(coords),
                 markers: {
-                  const Marker(
-                    markerId: MarkerId('marker1'),
-                    position: LatLng(42.389769, -72.523326),
+                  Marker(
+                    markerId: const MarkerId('guess'),
+                    position: guessPos,
+                  ),
+                  Marker(
+                    markerId: const MarkerId('answer'),
+                    position: answerPos,
                   )
                 },
-                mapType: MapType.hybrid,
+                polylines: {line},
+                cloudMapId: '74ae03550584037b',
+                cameraTargetBounds: CameraTargetBounds(LatLngBounds(
+                    southwest: const LatLng(42.383764, -72.536265),
+                    northeast: const LatLng(42.396610, -72.516493))),
+                minMaxZoomPreference: const MinMaxZoomPreference(15.5, 19),
                 initialCameraPosition: umasscampus,
                 onMapCreated: (GoogleMapController controller) {
                   _controller.complete(controller);
@@ -143,7 +183,7 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Container(height: 50.0),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _makeGuess,
+        onPressed: makeGuess,
         tooltip: 'Make your guess',
         label: const Text('Guess'),
         icon: const Icon(Icons.check_circle_outline),
