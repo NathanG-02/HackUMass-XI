@@ -385,7 +385,7 @@ class _IconButtonExampleState extends State<IconButtonExample> {
             ),
             child: IconButton(
                 icon: Image.asset(widget.imagePaths[widget.currentImageIdx], scale: 2.5),
-                tooltip: 'Expand image',
+                //tooltip: 'Expand image',
                 onPressed: () {
                   setState(() {
                     _coeff = _coeff * -1;
