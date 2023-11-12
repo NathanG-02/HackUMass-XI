@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'dart:math';
 
 void main() {
   runApp(const MapSample());
@@ -31,6 +32,7 @@ class MapSampleState extends State<MapSample> {
 
   @override
   Widget build(BuildContext context) {
+<<<<<<< Updated upstream
     return Directionality(
       textDirection: TextDirection.ltr,
       child: Scaffold(
@@ -64,3 +66,82 @@ function score(guess, answer, elapsed){
     return score;
 }
 */
+=======
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: Text(widget.title),
+      ),
+      body: Stack(
+        children: <Widget>[
+          Container(
+            width: double.infinity,
+            height: double.infinity,
+            child: GoogleMap(
+              // key:
+              markers: {
+                const Marker(
+                  markerId: MarkerId('marker1'),
+                  position: LatLng(42.389769, -72.523326),
+                )
+              },
+              mapType: MapType.hybrid,
+              initialCameraPosition: umasscampus,
+              onMapCreated: (GoogleMapController controller) {
+                _controller.complete(controller);
+              },
+            ),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: IconButtonExample(),
+          ),
+        ],
+      ),
+      bottomNavigationBar: BottomAppBar(
+        shape: const CircularNotchedRectangle(),
+        child: Container(height: 50.0),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _makeGuess,
+        tooltip: 'Make your guess',
+        label: const Text('Guess'),
+        icon: const Icon(Icons.check_circle_outline),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+    );
+  }
+}
+
+class IconButtonExample extends StatefulWidget {
+  const IconButtonExample({super.key});
+
+  @override
+  State<IconButtonExample> createState() => _IconButtonExampleState();
+}
+
+class _IconButtonExampleState extends State<IconButtonExample> {
+  @override
+  double _scale = 0.5;
+  int _coeff = -1;
+  Widget build(BuildContext context) {
+    return Transform.scale(
+      scale: _scale,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.inversePrimary,
+        ),
+        child: IconButton(
+          icon: Image.asset('images/Image 1.png'),
+          tooltip: 'Expand image',
+          onPressed: () {
+          setState(() {
+            _coeff = _coeff * -1;
+            _scale = _scale + 0.54 * _coeff;
+          });
+        }),
+      )
+    );
+  }
+}
+>>>>>>> Stashed changes
