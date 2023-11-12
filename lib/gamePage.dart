@@ -24,6 +24,8 @@ class _GamePageState extends State<GamePage> {
     "images/back_of_hasbrouck.png",
     "images/front_of_hasbrouck.png",
     "images/integrated_science_bldg.png",
+    "images/isenberg.jpg",
+    "images/ilc_rooftop_garden.jpg",
   ];
   final List<LatLng> _targetCoords = [
     const LatLng(42.389777, -72.523340),
@@ -33,6 +35,8 @@ class _GamePageState extends State<GamePage> {
     const LatLng(42.391851, -72.526404),
     const LatLng(42.392471, -72.526093),
     const LatLng(42.391759, -72.524170),
+    const LatLng(42.387370, -72.525540),
+    const LatLng(42.394453, -72.528263),
   ];
   int _roundIndex = 0;
 
@@ -287,7 +291,8 @@ class _GamePageState extends State<GamePage> {
     // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        title: Text("Umass Geoguessr", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        title: const Text("Umass Geoguessr",
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
         backgroundColor: const Color.fromARGB(255, 163, 25, 25),
       ),
       body: Stack(
@@ -319,7 +324,8 @@ class _GamePageState extends State<GamePage> {
               },
             ),
           ),
-          IconButtonExample(imagePaths: _imagePaths, currentImageIdx: _roundIndex),
+          IconButtonExample(
+              imagePaths: _imagePaths, currentImageIdx: _roundIndex),
         ],
       ),
       bottomNavigationBar: BottomAppBar(
@@ -375,26 +381,23 @@ class _IconButtonExampleState extends State<IconButtonExample> {
   Widget build(BuildContext context) {
     return Align(
         alignment: Alignment.centerRight,
-        child: 
-          Transform.scale(
-          scale: _scale,
-          alignment: Alignment.centerRight,
-          child: Container(
-            decoration: const BoxDecoration(
-              color: Color.fromARGB(255, 163, 25, 25),
-            ),
-            child: IconButton(
-                icon: Image.asset(widget.imagePaths[widget.currentImageIdx], scale: 2.5),
-                //tooltip: 'Expand image',
-                onPressed: () {
-                  setState(() {
-                    _coeff = _coeff * -1;
-                    _scale = _scale + 0.54 * _coeff;
-                  });
-                }
-            ),
-          )
-        )
-      );
+        child: Transform.scale(
+            scale: _scale,
+            alignment: Alignment.centerRight,
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Color.fromARGB(255, 163, 25, 25),
+              ),
+              child: IconButton(
+                  icon: Image.asset(widget.imagePaths[widget.currentImageIdx],
+                      scale: 2.5),
+                  //tooltip: 'Expand image',
+                  onPressed: () {
+                    setState(() {
+                      _coeff = _coeff * -1;
+                      _scale = _scale + 0.54 * _coeff;
+                    });
+                  }),
+            )));
   }
 }

@@ -5,13 +5,15 @@ import 'package:umass_geoguessr_app/gamePage.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
- 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('UMass GeoGuessr', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        title: const Text('UMass GeoGuessr',
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
         backgroundColor: const Color.fromARGB(255, 163, 25, 25),
+        automaticallyImplyLeading: false,
       ), // AppBar
       body: Container(
         height: double.infinity,

@@ -4,6 +4,7 @@ import 'package:umass_geoguessr_app/homePage.dart';
 
 void main() {
   runApp(MaterialApp(
+    debugShowCheckedModeBanner: false,
     initialRoute: '/',
     routes: {
       '/': (context) => const HomePage(),
@@ -19,6 +20,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'UMass GeoGuessr App',
       theme: ThemeData(
         // This is the theme of your application.
