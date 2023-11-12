@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:math';
+import 'package:umass_geoguessr_app/gamePage.dart';
 
 void main() {
   runApp(const MyApp());
@@ -189,6 +190,7 @@ class _MyHomePageState extends State<MyHomePage> {
         icon: const Icon(Icons.check_circle_outline),
       ), // This trailing comma makes auto-formatting nicer for build methods.
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      home: const GamePage(title: 'UMass GeoGuessr'),
     );
   }
 }
