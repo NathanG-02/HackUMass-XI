@@ -212,8 +212,8 @@ class _GamePageState extends State<GamePage> {
     // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
+        backgroundColor: const Color.fromARGB(255, 163, 25, 25),
+        title: Text(widget.title, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
       ),
       body: Stack(
         children: <Widget>[
@@ -299,8 +299,8 @@ class _IconButtonExampleState extends State<IconButtonExample> {
     return Transform.scale(
         scale: _scale,
         child: Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.inversePrimary,
+          decoration: const BoxDecoration(
+            color: Color.fromARGB(255, 163, 25, 25),
           ),
           child: IconButton(
               icon: Image.asset(widget.imagePaths[widget.currentImageIdx], scale: 2.5),

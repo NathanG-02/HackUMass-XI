@@ -10,8 +10,8 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('UMass GeoGuessr'),
-        backgroundColor: Color.fromARGB(255, 163, 25, 25),
+        title: const Text('UMass GeoGuessr', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        backgroundColor: const Color.fromARGB(255, 163, 25, 25),
       ), // AppBar
       body: Container(
         height: double.infinity,
