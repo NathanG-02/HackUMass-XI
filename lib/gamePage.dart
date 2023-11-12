@@ -25,6 +25,7 @@ class _GamePageState extends State<GamePage> {
   bool _roundOver = false;
   bool _gameOver = false;
   int _score = 0;
+
   final List<String> _imagePaths = [
     "images/image_1.png",
     "images/fine_arts_roof.jpg",
@@ -199,6 +200,7 @@ class _GamePageState extends State<GamePage> {
       _gameOver = true;
     });
   }
+
 
   @override
   Widget build(BuildContext context) {
