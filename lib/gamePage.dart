@@ -1,6 +1,7 @@
-import "package:flutter/material.dart";
+import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'dart:math';
 
 class GamePage extends StatefulWidget {
   const GamePage({super.key, required this.title});
@@ -82,14 +83,49 @@ class _GamePageState extends State<GamePage> {
     zoom: 15.8,
   );
 
-  void _makeGuess() {
+  LatLng guessPos = const LatLng(0, 0);
+
+  LatLng answerPos = const LatLng(42.389777, -72.523340);
+
+  Polyline line = const Polyline(
+      polylineId: PolylineId('guessanswerline'),
+      points: <LatLng>[LatLng(0, 0), LatLng(0, 0)]);
+
+  double dist = 0;
+
+  double degToRad(deg) {
+    return (deg * pi) / 180;
+  }
+
+  void makeGuess() {
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _score++;
+      line = Polyline(
+          width: 3,
+          polylineId: const PolylineId('guessanswerline'),
+          points: <LatLng>[guessPos, answerPos]);
+
+      // dist = acos(sin(lat1)*sin(lat2)+cos(lat1)*cos(lat2)*cos(lon2-lon1))*6371  (in kilometers)
+      dist = (acos((sin(degToRad(guessPos.latitude)) *
+                      sin(degToRad(answerPos.latitude))) +
+                  (cos(degToRad(guessPos.latitude)) *
+                      cos(degToRad(answerPos.latitude)) *
+                      cos(degToRad(
+                          answerPos.longitude - guessPos.longitude)))) *
+              6371) *
+          1000;
+
+      _score = (1000.0 - (1000.0 * (dist / 1000)))
+          .toInt(); // (time remaining/total time)
+
+      if (_score < 0) {
+        _score = 0;
+      }
+    });
+  }
+
+  void markGuess(coords) {
+    setState(() {
+      guessPos = coords;
     });
   }
 
@@ -134,14 +170,23 @@ class _GamePageState extends State<GamePage> {
               width: 750,
               height: 750,
               child: GoogleMap(
-                // key:
+                onTap: (coords) => markGuess(coords),
                 markers: {
-                  const Marker(
-                    markerId: MarkerId('marker1'),
-                    position: LatLng(42.389769, -72.523326),
+                  Marker(
+                    markerId: const MarkerId('guess'),
+                    position: guessPos,
+                  ),
+                  Marker(
+                    markerId: const MarkerId('answer'),
+                    position: answerPos,
                   )
                 },
-                mapType: MapType.hybrid,
+                polylines: {line},
+                cloudMapId: '74ae03550584037b',
+                cameraTargetBounds: CameraTargetBounds(LatLngBounds(
+                    southwest: const LatLng(42.383764, -72.536265),
+                    northeast: const LatLng(42.396610, -72.516493))),
+                minMaxZoomPreference: const MinMaxZoomPreference(15.5, 19),
                 initialCameraPosition: umasscampus,
                 onMapCreated: (GoogleMapController controller) {
                   _controller.complete(controller);
@@ -158,7 +203,7 @@ class _GamePageState extends State<GamePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             FloatingActionButton(
-              onPressed: _makeGuess,
+              onPressed: makeGuess,
               child: const Text("Guess"),
             ),
             Container(
@@ -172,6 +217,10 @@ class _GamePageState extends State<GamePage> {
             Container(
               margin: const EdgeInsets.all(8.0),
               child: Text("game time: $_gameSeconds"),
+            ),
+            Container(
+              margin: const EdgeInsets.all(8.0),
+              child: Text("distance: ${dist.toInt()} meters"),
             ),
           ],
         ),
