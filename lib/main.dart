@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:umass_geoguessr_app/gamePage.dart';
+import 'package:umass_geoguessr_app/homePage.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MaterialApp(
+    initialRoute: '/',
+    routes: {
+      '/': (context) => const HomePage(),
+      '/second': (context) => const MyApp(),
+    },
+  )); //MaterialApp
 }
 
 class MyApp extends StatelessWidget {

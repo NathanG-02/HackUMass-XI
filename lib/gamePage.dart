@@ -287,8 +287,8 @@ class _GamePageState extends State<GamePage> {
     // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text("Umass Geoguessr"),
+        title: Text("Umass Geoguessr", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        backgroundColor: const Color.fromARGB(255, 163, 25, 25),
       ),
       body: Stack(
         children: <Widget>[
@@ -319,11 +319,7 @@ class _GamePageState extends State<GamePage> {
               },
             ),
           ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: IconButtonExample(
-                imagePaths: _imagePaths, currentImageIdx: _roundIndex),
-          ),
+          IconButtonExample(imagePaths: _imagePaths, currentImageIdx: _roundIndex),
         ],
       ),
       bottomNavigationBar: BottomAppBar(
@@ -377,22 +373,28 @@ class _IconButtonExampleState extends State<IconButtonExample> {
   int _coeff = -1;
   @override
   Widget build(BuildContext context) {
-    return Transform.scale(
-        scale: _scale,
-        child: Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.inversePrimary,
-          ),
-          child: IconButton(
-              icon: Image.asset(widget.imagePaths[widget.currentImageIdx],
-                  scale: 2.5),
-              tooltip: 'Expand image',
-              onPressed: () {
-                setState(() {
-                  _coeff = _coeff * -1;
-                  _scale = _scale + 0.54 * _coeff;
-                });
-              }),
-        ));
+    return Align(
+        alignment: Alignment.centerRight,
+        child: 
+          Transform.scale(
+          scale: _scale,
+          alignment: Alignment.centerRight,
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Color.fromARGB(255, 163, 25, 25),
+            ),
+            child: IconButton(
+                icon: Image.asset(widget.imagePaths[widget.currentImageIdx], scale: 2.5),
+                tooltip: 'Expand image',
+                onPressed: () {
+                  setState(() {
+                    _coeff = _coeff * -1;
+                    _scale = _scale + 0.54 * _coeff;
+                  });
+                }
+            ),
+          )
+        )
+      );
   }
 }
