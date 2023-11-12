@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:umass_geoguessr_app/gamePage.dart';
+import 'package:umass_geoguessr_app/main.dart';
 import 'package:umass_geoguessr_app/homePage.dart';
 
 class GameOverPage extends StatefulWidget {
@@ -33,7 +33,7 @@ class _GameOverPageState extends State<GameOverPage> {
                   ),
                   onPressed: () {
                     Navigator.of(context).push(MaterialPageRoute(
-                      builder: (BuildContext context) => const GamePage()));
+                      builder: (BuildContext context) => const MyApp()));
                   },
                   child: const Text("Yes", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white))),
                 ElevatedButton(
