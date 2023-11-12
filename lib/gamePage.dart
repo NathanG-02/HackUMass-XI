@@ -25,38 +25,46 @@ class _GamePageState extends State<GamePage> {
   bool _roundOver = false;
   bool _gameOver = false;
   int _score = 0;
+  final List<String> _imagePaths = [
+    "images/image_1.png",
+    "images/fine_arts_roof.jpg",
+    "images/hasbrouck_bridge.jpg",
+    "images/ilc_table_room.jpg",
+  ];
+  int _currentImageIdx = 0;
+
+  // switch image to next in array
+  // if went thru all images, stop game
+  void _switchImage() {
+    setState(() {
+      _currentImageIdx = _currentImageIdx + 1;
+    });
+    if (_currentImageIdx == _imagePaths.length) {
+      _stopGame();
+    }
+  }
 
   // late means not initialized until first use
-  late Timer _gameTimer;
-  late Timer _roundTimer;
-  int _gameSeconds = 180;
-  int _roundSeconds = 60;
+  late Timer gameTimer;
+  late Timer roundTimer;
+  final int _totalRoundSeconds = 5;
+  int _gameSeconds = 30;
+  int _roundSeconds = 5;
 
-  // initialize timer
-  @override
-  void initState() {
-    super.initState();
+  Timer _startRoundTimer() {
     const oneSec = Duration(seconds: 1);
-    _gameTimer = Timer.periodic(
-      oneSec,
-      (Timer timer) {
-        if (_gameSeconds == 0) {
-          setState(() {
-            timer.cancel();
-          });
-        } else {
-          setState(() {
-            _gameSeconds--;
-          });
-        }
-      },
-    );
-    _roundTimer = Timer.periodic(
+    return Timer.periodic(
       oneSec,
       (Timer timer) {
         if (_roundSeconds == 0) {
           setState(() {
             timer.cancel();
+          });
+        } else if (_roundSeconds == 1) {
+          // weird thing when roundTime = 0 but gameTime still goes down
+          setState(() {
+            _roundSeconds--;
+            _stopRound();
           });
         } else {
           setState(() {
@@ -67,11 +75,35 @@ class _GamePageState extends State<GamePage> {
     );
   }
 
+  // initialize timer
+  @override
+  void initState() {
+    super.initState();
+    const oneSec = Duration(seconds: 1);
+    gameTimer = Timer.periodic(
+      oneSec,
+      (Timer timer) {
+        if (_gameSeconds == 0) {
+          setState(() {
+            timer.cancel();
+            _stopGame();
+          });
+          // stop game timer from running while round is over
+        } else if (!_roundOver) {
+          setState(() {
+            _gameSeconds--;
+          });
+        }
+      },
+    );
+    roundTimer = _startRoundTimer();
+  }
+
   // cancel timer when removing widget
   @override
   void dispose() {
-    _gameTimer.cancel();
-    _roundTimer.cancel();
+    gameTimer.cancel();
+    roundTimer.cancel();
     super.dispose();
   }
 
@@ -129,6 +161,45 @@ class _GamePageState extends State<GamePage> {
     });
   }
 
+  void _nextRound() {
+    setState(() {
+      _roundOver = false;
+      _roundSeconds = _totalRoundSeconds;
+      roundTimer = _startRoundTimer();
+    });
+    _switchImage();
+  }
+
+  void _stopRound() {
+    setState(() {
+      _roundOver = true;
+    });
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Timer Finished'),
+          content: const Text('The timer has run out.'),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                _nextRound();
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text('Next'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _stopGame() {
+    setState(() {
+      _gameOver = true;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -139,17 +210,10 @@ class _GamePageState extends State<GamePage> {
     // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
         child: Row(
           // Column is also a layout widget. It takes a list of children and
           // arranges them vertically. By default, it sizes itself to fit its
@@ -193,7 +257,7 @@ class _GamePageState extends State<GamePage> {
                 },
               ),
             ),
-            Image.asset('images/image_1.png', scale: 2.5),
+            Image.asset(_imagePaths[_currentImageIdx], scale: 2.5),
           ],
         ),
       ),
