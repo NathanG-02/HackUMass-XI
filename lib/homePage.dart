@@ -1,7 +1,4 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:umass_geoguessr_app/gamePage.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -30,7 +27,7 @@ class HomePage extends StatelessWidget {
           children: <Widget>[
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color.fromARGB(255, 163, 25, 25),
+                backgroundColor: const Color.fromARGB(255, 163, 25, 25),
               ),
               child: const Text('Play'),
               onPressed: () {
