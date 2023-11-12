@@ -1,5 +1,5 @@
 name: umass_geoguessr_app
-description: A new Flutter project.
+description: Given a photo of some location on campus, guess where the picture was taken!
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
