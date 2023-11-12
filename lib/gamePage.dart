@@ -106,10 +106,12 @@ class _GamePageState extends State<GamePage> {
         // TRY THIS: Try changing the color here to a specific color (to
         // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
         // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: Color.fromARGB(255, 163, 25, 25),
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: Text(widget.title, style: TextStyle(
+          color: Colors.white,
+        )),
       ),
       body: Stack(
         // Center is a layout widget. It takes a single child and positions it
@@ -146,7 +148,7 @@ class _GamePageState extends State<GamePage> {
                 },
               ),
             ),
-            Align(
+            const Align(
               alignment: Alignment.centerRight,
               child: IconButtonExample(),
             ),
@@ -195,8 +197,8 @@ class _IconButtonExampleState extends State<IconButtonExample> {
     return Transform.scale(
       scale: _scale,
       child: Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.inversePrimary,
+        decoration: const BoxDecoration(
+          color:Color.fromARGB(255, 163, 25, 25),
         ),
         child: IconButton(
           icon: Image.asset('images/image_1.PNG'),

@@ -2,9 +2,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:umass_geoguessr_app/gamePage.dart';
+import 'package:umass_geoguessr_app/homePage.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MaterialApp(
+    initialRoute: '/',
+    routes: {
+      '/': (context) => const HomePage(),
+      '/second': (context) => const MyApp(),
+    },
+  )); //MaterialApp
 }
 
 class MyApp extends StatelessWidget {
@@ -31,10 +38,7 @@ class MyApp extends StatelessWidget {
         //
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
-        colorScheme:
-            ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 163, 25, 25)),
-        useMaterial3: true,
-      ),
+        canvasColor: const Color.fromARGB(255, 163, 25, 25)),
       home: const GamePage(title: 'UMass GeoGuessr'),
     );
   }
