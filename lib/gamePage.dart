@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:math';
-
 import 'package:umass_geoguessr_app/gameOverPage.dart';
 
 class GamePage extends StatefulWidget {
@@ -28,9 +27,9 @@ class _GamePageState extends State<GamePage> {
   ];
   final List<LatLng> _targetCoords = [
     const LatLng(42.389777, -72.523340),
-    const LatLng(42.389777, -72.523340),
-    const LatLng(42.389777, -72.523340),
-    const LatLng(42.389777, -72.523340),
+    const LatLng(42.388175, -72.526205),
+    const LatLng(42.391825, -72.525813),
+    const LatLng(42.390851, -72.525820),
     const LatLng(42.391851, -72.526404),
     const LatLng(42.392471, -72.526093),
     const LatLng(42.391759, -72.524170),
@@ -45,8 +44,35 @@ class _GamePageState extends State<GamePage> {
     });
     // if cycled back to 0, went thru all images
     if (_roundIndex == 0) {
+      debugPrint("Cycle");
       _stopGame("You went through all of the images!");
     }
+  }
+
+  void _stopGame(String content) {
+    setState(() {
+      _gameOver = true;
+    });
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Game Over'),
+          content: Text(content),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (BuildContext context) =>
+                        GameOverPage(score: _totalScore, time: _gameSeconds)));
+              },
+              child: const Text('Show results'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   // late means not initialized until first use
@@ -90,9 +116,7 @@ class _GamePageState extends State<GamePage> {
             _roundSeconds--;
             _stopRound();
           });
-        } else if (_roundOver) {
-          // do nothing
-        } else if (!_roundOver) {
+        } else if (!_roundOver && !_gameOver) {
           setState(() {
             _roundSeconds--;
           });
@@ -184,7 +208,9 @@ class _GamePageState extends State<GamePage> {
     });
 
     _stopRound();
-
+    if (_roundIndex == _imagePaths.length - 1) {
+      _nextRound();
+    }
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -213,7 +239,6 @@ class _GamePageState extends State<GamePage> {
           actions: [
             ElevatedButton(
               onPressed: () {
-                roundTimer.cancel();
                 _nextRound();
                 Navigator.of(context).pop(); // Close the dialog
               },
@@ -234,6 +259,7 @@ class _GamePageState extends State<GamePage> {
   void _nextRound() {
     setState(() {
       _roundOver = false;
+      roundTimer.cancel();
       _roundSeconds = _totalRoundSeconds;
       roundTimer = _startRoundTimer();
       line = const Polyline(
@@ -249,32 +275,6 @@ class _GamePageState extends State<GamePage> {
     setState(() {
       _roundOver = true;
     });
-  }
-
-  void _stopGame(String content) {
-    setState(() {
-      _gameOver = true;
-    });
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Game Over'),
-          content: Text(content),
-          actions: [
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (BuildContext context) =>
-                        GameOverPage(score: _totalScore, time: _gameSeconds)));
-              },
-              child: const Text('Show results'),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   @override
