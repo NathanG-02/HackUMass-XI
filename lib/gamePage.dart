@@ -148,40 +148,40 @@ class _GamePageState extends State<GamePage> {
         title: Text(widget.title),
       ),
       body: Stack(
-          children: <Widget>[
-            SizedBox(
-              width: double.infinity,
-              height: double.infinity,
-              child: GoogleMap(
-                onTap: (coords) => markGuess(coords),
-                markers: {
-                  Marker(
-                    markerId: const MarkerId('guess'),
-                    position: guessPos,
-                  ),
-                  Marker(
-                    markerId: const MarkerId('answer'),
-                    position: answerPos,
-                  )
-                },
-                polylines: {line},
-                cloudMapId: '74ae03550584037b',
-                cameraTargetBounds: CameraTargetBounds(LatLngBounds(
-                    southwest: const LatLng(42.383764, -72.536265),
-                    northeast: const LatLng(42.396610, -72.516493))),
-                minMaxZoomPreference: const MinMaxZoomPreference(15.5, 19),
-                initialCameraPosition: umasscampus,
-                onMapCreated: (GoogleMapController controller) {
-                  _controller.complete(controller);
-                },
-              ),
+        children: <Widget>[
+          SizedBox(
+            width: double.infinity,
+            height: double.infinity,
+            child: GoogleMap(
+              onTap: (coords) => markGuess(coords),
+              markers: {
+                Marker(
+                  markerId: const MarkerId('guess'),
+                  position: guessPos,
+                ),
+                Marker(
+                  markerId: const MarkerId('answer'),
+                  position: answerPos,
+                )
+              },
+              polylines: {line},
+              cloudMapId: '74ae03550584037b',
+              cameraTargetBounds: CameraTargetBounds(LatLngBounds(
+                  southwest: const LatLng(42.383764, -72.536265),
+                  northeast: const LatLng(42.396610, -72.516493))),
+              minMaxZoomPreference: const MinMaxZoomPreference(15.5, 19),
+              initialCameraPosition: umasscampus,
+              onMapCreated: (GoogleMapController controller) {
+                _controller.complete(controller);
+              },
             ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: IconButtonExample(),
-            ),
-          ],
-        ),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: IconButtonExample(),
+          ),
+        ],
+      ),
       bottomNavigationBar: BottomAppBar(
         shape: const CircularNotchedRectangle(),
         child: Row(
@@ -222,26 +222,25 @@ class IconButtonExample extends StatefulWidget {
 }
 
 class _IconButtonExampleState extends State<IconButtonExample> {
-  @override
   double _scale = 0.5;
   int _coeff = -1;
+  @override
   Widget build(BuildContext context) {
     return Transform.scale(
-      scale: _scale,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.inversePrimary,
-        ),
-        child: IconButton(
-          icon: Image.asset('images/image_1.PNG'),
-          tooltip: 'Expand image',
-          onPressed: () {
-          setState(() {
-            _coeff = _coeff * -1;
-            _scale = _scale + 0.54 * _coeff;
-          });
-        }),
-      )
-    );
+        scale: _scale,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.inversePrimary,
+          ),
+          child: IconButton(
+              icon: Image.asset('images/image_1.PNG'),
+              tooltip: 'Expand image',
+              onPressed: () {
+                setState(() {
+                  _coeff = _coeff * -1;
+                  _scale = _scale + 0.54 * _coeff;
+                });
+              }),
+        ));
   }
 }
